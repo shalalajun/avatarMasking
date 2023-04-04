@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class maskAdd : MonoBehaviour
 {
-   public GameObject a;
+    public GameObject a;
     public GameObject b;
 
     void Start()

@@ -1,7 +1,7 @@
 #ifndef UNIVERSAL_SIMPLE_LIT_PASS_INCLUDED
 #define UNIVERSAL_SIMPLE_LIT_PASS_INCLUDED
-
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+
 
 struct Attributes
 {
@@ -120,6 +120,70 @@ Varyings LitPassVertexSimple(Attributes input)
     return output;
 }
 
+
+    half3 LightingLambertHalf(half3 lightColor, half3 lightDir, half3 normal)
+    {
+        half NdotL = dot(normal, lightDir)*0.5+0.5;
+        return lightColor * NdotL;
+    }
+
+
+    half4 UniversalFragmentBlinnPhongHalf(InputData inputData, half3 diffuse, half4 specularGloss, half smoothness, half3 emission, half alpha)
+    {
+        // To ensure backward compatibility we have to avoid using shadowMask input, as it is not present in older shaders
+    #if defined(SHADOWS_SHADOWMASK) && defined(LIGHTMAP_ON)
+        half4 shadowMask = inputData.shadowMask;
+    #elif !defined (LIGHTMAP_ON)
+        half4 shadowMask = unity_ProbesOcclusion;
+    #else
+        half4 shadowMask = half4(1, 1, 1, 1);
+    #endif
+
+        Light mainLight = GetMainLight(inputData.shadowCoord, inputData.positionWS, shadowMask);
+
+        #if defined(_SCREEN_SPACE_OCCLUSION)
+            AmbientOcclusionFactor aoFactor = GetScreenSpaceAmbientOcclusion(inputData.normalizedScreenSpaceUV);
+            mainLight.color *= aoFactor.directAmbientOcclusion;
+            inputData.bakedGI *= aoFactor.indirectAmbientOcclusion;
+        #endif
+
+        MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI);
+
+        half3 attenuatedLightColor = mainLight.color * (mainLight.distanceAttenuation * mainLight.shadowAttenuation);
+        half3 diffuseColor = inputData.bakedGI + LightingLambertHalf(attenuatedLightColor, mainLight.direction, inputData.normalWS);
+        half3 specularColor = LightingSpecular(attenuatedLightColor, mainLight.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, smoothness);
+
+    #ifdef _ADDITIONAL_LIGHTS
+        uint pixelLightCount = GetAdditionalLightsCount();
+        for (uint lightIndex = 0u; lightIndex < pixelLightCount; ++lightIndex)
+        {
+            Light light = GetAdditionalLight(lightIndex, inputData.positionWS, shadowMask);
+            #if defined(_SCREEN_SPACE_OCCLUSION)
+                light.color *= aoFactor.directAmbientOcclusion;
+            #endif
+            half3 attenuatedLightColor = light.color * (light.distanceAttenuation * light.shadowAttenuation);
+            diffuseColor += LightingLambertHalf(attenuatedLightColor, light.direction, inputData.normalWS);
+            specularColor += LightingSpecular(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, smoothness);
+        }
+    #endif
+
+    #ifdef _ADDITIONAL_LIGHTS_VERTEX
+        diffuseColor += inputData.vertexLighting;
+    #endif
+
+        half3 finalColor = diffuseColor * diffuse + emission;
+
+    #if defined(_SPECGLOSSMAP) || defined(_SPECULAR_COLOR)
+        finalColor += specularColor;
+    #endif
+
+        return half4(finalColor, alpha);
+    }
+
+
+
+
+
 // Used for StandardSimpleLighting shader
 half4 LitPassFragmentSimple(Varyings input) : SV_Target
 {
@@ -145,7 +209,8 @@ half4 LitPassFragmentSimple(Varyings input) : SV_Target
     InputData inputData;
     InitializeInputData(input, normalTS, inputData);
 
-    half4 color = UniversalFragmentBlinnPhong(inputData, diffuse, specular, smoothness, emission, alpha);
+    //half4 color = UniversalFragmentBlinnPhong(inputData, diffuse, specular, smoothness, emission, alpha);
+    half4 color = UniversalFragmentBlinnPhongHalf(inputData, diffuse, specular, smoothness, emission, alpha); // 스타일라이즈드
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
     color.a = OutputAlpha(color.a, _Surface);
     color.a *= input.vcolor.r; 
