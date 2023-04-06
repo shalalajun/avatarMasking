@@ -59,7 +59,7 @@ Shader "Universal Render Pipeline/Simple Lit Mask"
 
             // Use same blending / depth states as Standard shader
             Blend[_SrcBlend][_DstBlend]
-            //ZWrite[_ZWrite]
+            ZWrite[_ZWrite]
             Cull[_Cull]
 
             HLSLPROGRAM
@@ -135,7 +135,7 @@ Shader "Universal Render Pipeline/Simple Lit Mask"
             #pragma fragment ShadowPassFragment
 
             #include "Packages/com.unity.render-pipelines.universal/Shaders/SimpleLitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
+            #include "ShadowCasterPass.hlsl"
             ENDHLSL
         }
 

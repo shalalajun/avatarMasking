@@ -2,6 +2,9 @@
 #define UNIVERSAL_SIMPLE_LIT_PASS_INCLUDED
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
+#pragma shader_feature_local _ALPHABLEND_ON 
+//테스트
+
 
 struct Attributes
 {
@@ -192,9 +195,9 @@ half4 LitPassFragmentSimple(Varyings input) : SV_Target
 
     float2 uv = input.uv;
     half4 diffuseAlpha = SampleAlbedoAlpha(uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
-    half3 diffuse = diffuseAlpha.rgb * _BaseColor.rgb;
+    half3 diffuse = diffuseAlpha.rgb * _BaseColor.rgb;  
 
-    half alpha = diffuseAlpha.a * _BaseColor.a;
+    half alpha = diffuseAlpha.a * _BaseColor.a * input.vcolor.r;//테스트
     AlphaDiscard(alpha, _Cutoff);
 
     #ifdef _ALPHAPREMULTIPLY_ON
@@ -209,11 +212,13 @@ half4 LitPassFragmentSimple(Varyings input) : SV_Target
     InputData inputData;
     InitializeInputData(input, normalTS, inputData);
 
-    //half4 color = UniversalFragmentBlinnPhong(inputData, diffuse, specular, smoothness, emission, alpha);
-    half4 color = UniversalFragmentBlinnPhongHalf(inputData, diffuse, specular, smoothness, emission, alpha); // 스타일라이즈드
+    half4 color = UniversalFragmentBlinnPhong(inputData, diffuse, specular, smoothness, emission, alpha);
+
+    // half4 color = UniversalFragmentBlinnPhongHalf(inputData, diffuse, specular, smoothness, emission, alpha); // 스타일라이즈드
+
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
     color.a = OutputAlpha(color.a, _Surface);
-    color.a *= input.vcolor.r; 
+   // color.a *= input.vcolor.r; 
 
     return color;
 }
