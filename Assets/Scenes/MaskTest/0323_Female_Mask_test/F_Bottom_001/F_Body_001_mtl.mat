@@ -8,8 +8,8 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: F_Body_001_mtl
-  m_Shader: {fileID: 4800000, guid: 5048e5eb53fae4b27b22df3ca0667044, type: 3}
-  m_ShaderKeywords: _ALPHATEST_ON _NORMALMAP
+  m_Shader: {fileID: 4800000, guid: bf393285ec29a488ab2a38d09ceed8cd, type: 3}
+  m_ShaderKeywords: _ALPHATEST_ON _NORMALMAP _RECEIVE_SHADOWS_OFF _SPECULAR_SETUP
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -87,7 +87,7 @@ Material:
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
     - _Cull: 2
-    - _Cutoff: 0.5
+    - _Cutoff: 0.55
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
     - _DirectionalFresnel: 0
@@ -111,7 +111,7 @@ Material:
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _QueueOffset: 0
-    - _ReceiveShadows: 1
+    - _ReceiveShadows: 0
     - _ReflBrushStrength: 0
     - _ReflProbeIntensity: 1
     - _ReflectSmooth: 0.25
