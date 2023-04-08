@@ -450,6 +450,23 @@ Shader "Universal Render Pipeline/Stylized Lit Custom"
             }
 
 
+            float DitherPattern(float2 screenPosition)
+            {
+                const float2 ditherMatrix[16] = {
+                    float2(0.0, 32.0), float2(8.0, 40.0), float2(2.0, 34.0), float2(10.0, 42.0),
+                    float2(12.0, 44.0), float2(4.0, 36.0), float2(14.0, 46.0), float2(6.0, 38.0),
+                    float2(3.0, 35.0), float2(11.0, 43.0), float2(1.0, 33.0), float2(9.0, 41.0),
+                    float2(15.0, 47.0), float2(7.0, 39.0), float2(13.0, 45.0), float2(5.0, 37.0)
+                };
+
+                float ditherThreshold = 0.0;
+                for (int i = 0; i < 16; ++i)
+                {
+                    ditherThreshold += (1.0 / 256.0) * step(ditherMatrix[i], fmod(screenPosition, 16.0));
+                }
+                return ditherThreshold;
+            }
+
             // Used in Standard (Physically Based) shader
             half4 LitPassFragment(Varyings input) : SV_Target
             {
